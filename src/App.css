@@ -1,0 +1,10 @@
+/* App-level overrides; detailed styles live in src/index.css */
+
+#root {
+  min-height: 100%;
+}
+
+/* Remove Vite starter demo styles (logo spin, cards, etc.) */
+.logo { all: unset; }
+.card { all: unset; }
+.read-the-docs { all: unset; }
