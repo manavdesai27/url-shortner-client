@@ -1,6 +1,20 @@
 import { useState } from "react"
 
-export default function UrlList({ urlList = [], onRefresh }) {
+/**
+ * @typedef {Object} UrlItem
+ * @property {string} url
+ * @property {string} shortUrl
+ * @property {string} shortCode
+ * @property {number} [clickCount]
+ * @property {string} [createdAt]
+ * @property {string|null} [expiresAt]
+ */
+
+/**
+ * @param {{ urlList: UrlItem[], onRefresh?: (shortCode: string) => (Promise<void>|void) }} props
+ */
+
+export default function UrlList({ urlList = /** @type {UrlItem[]} */([]), onRefresh }) {
   const [copiedIndex, setCopiedIndex] = useState(null)
   const [refreshingIndex, setRefreshingIndex] = useState(null)
 
