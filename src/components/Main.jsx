@@ -1,40 +1,13 @@
 import Shortener from "./Shortener"
-import CallToAction from "./CallToAction"
-import {TiDeleteOutline} from "react-icons/ti"
-import UrlList from "./UrlList"
-import { useState, useEffect } from "react"
 import iconBrand from "../images/icon-brand-recognition.svg"
 import iconRecords from "../images/icon-detailed-records.svg"
 import iconCustom from "../images/icon-fully-customizable.svg"
 
-const getLocalStorage = () => {
-    if(!localStorage.getItem('links')) return []
-    return JSON.parse(localStorage.getItem('links'))
-}
-
 export default function Main() {
-
-    const [links, setLinks] = useState(getLocalStorage)
-
-    useEffect(() => {
-        localStorage.setItem('links', JSON.stringify(links))
-    }, [links])
-
-    function addLink(newItem) {
-        setLinks([...links, newItem])
-    }
-
-    function hideLinks() {
-        setLinks([])
-    }
-
     return <main>
-        <Shortener addLink={addLink} />
+        <Shortener />
         <div className="container">
-            <UrlList urlList={links} />
-            <div style={{ textAlign: 'center' }}>
-                { links.length > 0 && <TiDeleteOutline className="btn-cross" onClick={hideLinks} /> }
-            </div>
+            {/* Note: The links list now lives on the /links page (protected). */}
         </div>
         <section className="stats">
             <div className="container">

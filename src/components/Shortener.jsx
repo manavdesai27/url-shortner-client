@@ -6,7 +6,7 @@ import { useAuth } from "../context/AuthContext.tsx";
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
-export default function Shortener(props) {
+export default function Shortener() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -139,7 +139,7 @@ export default function Shortener(props) {
         shortUrl: shortCode ? `${apiUrl}/${shortCode}` : "",
         shortCode: shortCode || "",
       };
-      props.addLink(newItem);
+      // Persisting of created links is now server-side; view them on /links when logged in.
       setInput("");
       setError(false);
       setFieldError("");

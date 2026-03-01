@@ -7,6 +7,8 @@ import Hero from './components/Hero'
 import Main from './components/Main'
 import Login from './pages/Login'
 import Signup from './pages/Signup'
+import ProtectedRoute from './components/ProtectedRoute'
+import Links from './pages/Links'
 
 function App() {
   return (
@@ -16,6 +18,7 @@ function App() {
         <Header />
         <Routes>
           <Route path="/" element={<><Hero /><Main /></>} />
+          <Route path="/links" element={<ProtectedRoute><Links /></ProtectedRoute>} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
         </Routes>
