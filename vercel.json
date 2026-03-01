@@ -3,6 +3,10 @@
     {
       "source": "/l/:code([0-9A-Za-z]{7})",
       "destination": "https://url-shortner-backend-zi3k.onrender.com/:code"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ]
 }
