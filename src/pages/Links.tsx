@@ -3,6 +3,7 @@ import UrlList from '../components/UrlList.jsx';
 import { useAuth } from '../context/AuthContext.tsx';
 
 const apiUrl = import.meta.env.VITE_API_URL as string;
+const shortDomain = import.meta.env.VITE_SHORT_DOMAIN as string;
 
 type Item = {
   url: string;
@@ -66,7 +67,7 @@ export default function Links() {
       const data: PageResponse = await res.json();
       const mapped: Item[] = (data.content || []).map((row) => ({
         url: row.originalUrl,
-        shortUrl: `${apiUrl}/${row.shortCode}`,
+        shortUrl: `${shortDomain}/l/${row.shortCode}`,
         shortCode: row.shortCode,
         clickCount: row.clickCount,
         createdAt: row.createdAt,

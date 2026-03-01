@@ -5,6 +5,7 @@ import PulseLoader from "react-spinners/PulseLoader";
 import { useAuth } from "../context/AuthContext.tsx";
 
 const apiUrl = import.meta.env.VITE_API_URL;
+const shortDomain = import.meta.env.VITE_SHORT_DOMAIN;
 
 export default function Shortener() {
   const [input, setInput] = useState("");
@@ -136,7 +137,7 @@ export default function Shortener() {
         data && typeof data === "object" ? data.shortCode : undefined;
       const newItem = {
         url: value,
-        shortUrl: shortCode ? `${apiUrl}/${shortCode}` : "",
+        shortUrl: shortCode ? `${shortDomain}/l/${shortCode}` : "",
         shortCode: shortCode || "",
       };
       // Persisting of created links is now server-side; view them on /links when logged in.
