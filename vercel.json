@@ -4,6 +4,9 @@
       "source": "/l/:code([0-9A-Za-z]{7})",
       "destination": "https://url-shortner-backend-zi3k.onrender.com/:code"
     },
+    { "source": "/robots.txt", "destination": "/robots.txt" },
+    { "source": "/sitemap.xml", "destination": "/sitemap.xml" },
+    { "source": "/site.webmanifest", "destination": "/site.webmanifest" },
     {
       "source": "/(.*)",
       "destination": "/index.html"

@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /login
+Disallow: /signup
+Disallow: /links
+Sitemap: https://sh-rtn.vercel.app/sitemap.xml
