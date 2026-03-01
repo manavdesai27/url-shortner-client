@@ -28,6 +28,9 @@ type PageResponse = {
   last: boolean;         // is last page
 };
 
+type SortField = 'createdAt' | 'clickCount';
+type SortDir = 'asc' | 'desc';
+
 export default function Links() {
   const { user, loading: authLoading } = useAuth();
   const [items, setItems] = useState<Item[]>([]);
@@ -37,6 +40,11 @@ export default function Links() {
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
+  // Analytics controls
+  const [includeExpired, setIncludeExpired] = useState(false);
+  const [sortField, setSortField] = useState<SortField>('createdAt');
+  const [sortDir, setSortDir] = useState<SortDir>('desc');
+
   const canFetch = useMemo(() => !!user && !authLoading, [user, authLoading]);
 
   async function fetchPage(p: number) {
@@ -44,10 +52,12 @@ export default function Links() {
     setLoading(true);
     setErrorMsg(null);
     try {
-      const res = await fetch(
-        `${apiUrl}/links?page=${p}&size=${size}&includeExpired=false`,
-        { credentials: 'include' }
-      );
+      const url =
+        `${apiUrl}/links?page=${p}&size=${size}` +
+        `&includeExpired=${includeExpired}` +
+        `&sort=${encodeURIComponent(`${sortField},${sortDir}`)}`;
+
+      const res = await fetch(url, { credentials: 'include' });
       if (!res.ok) {
         setErrorMsg(`Failed to load links (status ${res.status})`);
         setLoading(false);
@@ -62,7 +72,7 @@ export default function Links() {
         createdAt: row.createdAt,
         expiresAt: row.expiresAt,
       }));
-      setItems((prev) => (p === 0 ? mapped : prev.concat(mapped)));
+      setItems((prev: Item[]) => (p === 0 ? mapped : prev.concat(mapped)));
       setHasMore(!data.last);
       setPage(data.number);
     } catch {
@@ -72,13 +82,13 @@ export default function Links() {
     }
   }
 
+  // Initial load and when auth state changes
   useEffect(() => {
     if (canFetch) {
-      // initial load
       fetchPage(0);
     } else {
       // reset when logged out
-      setItems([]);
+      setItems([] as Item[]);
       setPage(0);
       setHasMore(true);
       setErrorMsg(null);
@@ -86,24 +96,100 @@ export default function Links() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [canFetch]);
 
+  // Re-fetch when controls change
+  useEffect(() => {
+    if (!canFetch) return;
+    // reset then fetch the first page with new controls
+    setItems([] as Item[]);
+    setPage(0);
+    setHasMore(true);
+    fetchPage(0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [includeExpired, sortField, sortDir, canFetch]);
+
   function loadMore() {
     if (hasMore && !loading) {
       fetchPage(page + 1);
     }
   }
 
+  async function refreshClicks(shortCode: string) {
+    try {
+      const res = await fetch(`${apiUrl}/analytics/${shortCode}`, {
+        credentials: 'include',
+      });
+      if (!res.ok) {
+        // Non-owner or missing - surface a soft error
+        setErrorMsg(`Failed to refresh clicks for ${shortCode} (status ${res.status})`);
+        return;
+      }
+      const data = await res.json();
+      const newCount = typeof data.clickCount === 'number' ? data.clickCount : undefined;
+      if (typeof newCount === 'number') {
+        setItems((prev: Item[]) =>
+          prev.map((it) =>
+            it.shortCode === shortCode ? { ...it, clickCount: newCount } : it
+          )
+        );
+      }
+    } catch {
+      setErrorMsg('Network error while refreshing clicks.');
+    }
+  }
+
   return (
     <div className="container" style={{ padding: '2rem 1rem' }}>
       <h2 style={{ marginBottom: '1rem' }}>My Shortened Links</h2>
-      {errorMsg && (
-        <div role="alert" style={{
-          background: '#fdecea',
-          color: '#b71c1c',
-          padding: '0.75rem 1rem',
-          borderRadius: 6,
+
+      {/* Controls */}
+      <div
+        style={{
+          display: 'flex',
+          gap: '1rem',
+          alignItems: 'center',
+          flexWrap: 'wrap',
           marginBottom: '1rem',
-          border: '1px solid #f5c6cb'
-        }}>
+        }}
+      >
+        <label style={{ display: 'inline-flex', gap: '0.5rem', alignItems: 'center' }}>
+          <input
+            type="checkbox"
+            checked={includeExpired}
+            onChange={(e) => setIncludeExpired(e.target.checked)}
+          />
+          Include expired
+        </label>
+
+        <label style={{ display: 'inline-flex', gap: '0.5rem', alignItems: 'center' }}>
+          Sort by
+          <select
+            value={`${sortField},${sortDir}`}
+            onChange={(e) => {
+              const [field, dir] = e.target.value.split(',') as [SortField, SortDir];
+              setSortField(field);
+              setSortDir(dir);
+            }}
+          >
+            <option value="createdAt,desc">Newest</option>
+            <option value="createdAt,asc">Oldest</option>
+            <option value="clickCount,desc">Most clicks</option>
+            <option value="clickCount,asc">Least clicks</option>
+          </select>
+        </label>
+      </div>
+
+      {errorMsg && (
+        <div
+          role="alert"
+          style={{
+            background: '#fdecea',
+            color: '#b71c1c',
+            padding: '0.75rem 1rem',
+            borderRadius: 6,
+            marginBottom: '1rem',
+            border: '1px solid #f5c6cb',
+          }}
+        >
           {errorMsg}
         </div>
       )}
@@ -116,7 +202,7 @@ export default function Links() {
           {items.length === 0 && !loading ? (
             <p>No links yet. Shorten a URL on the home page to get started.</p>
           ) : (
-            <UrlList urlList={items} />
+            <UrlList urlList={items} onRefresh={refreshClicks} />
           )}
           <div style={{ textAlign: 'center', marginTop: '1rem' }}>
             {hasMore && (

@@ -22,9 +22,10 @@ export default function Header() {
         <div className="header-actions">
           {user ? (
             <>
-              <span style={{ color: 'var(--muted)', marginRight: 12 }}>
-                Hi, {user.username}
+              <span style={{ color: 'var(--muted)' }}>
+                Hi, <span style={{ color: 'var(--brand)' }}>{user.username}</span>
               </span>
+              <Link className="btn btn--primary" to="/links">My Links</Link>
               <button type="button" className="btn btn--ghost" onClick={handleLogout}>
                 Logout
               </button>
