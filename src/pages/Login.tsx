@@ -34,7 +34,7 @@ export default function Login() {
         let msg = 'Login failed'
         try {
           const data = await res.json()
-          msg = (data?.message as string) || (data as string) || msg
+          msg = (data?.error as string) || (data as string) || msg
         } catch {
           // ignore
         }

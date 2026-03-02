@@ -13,7 +13,7 @@ import Links from './pages/Links'
 function App() {
   return (
     <>
-      <Analytics />
+      <Analytics debug={false} />
       <BrowserRouter>
         <Header />
         <Routes>

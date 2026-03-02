@@ -41,7 +41,7 @@ export default function Signup() {
         let msg = 'Registration failed'
         try {
           const data = await reg.json()
-          msg = (data?.message as string) || (data as string) || msg
+          msg = (data?.error as string) || (data as string) || msg
         } catch {
           // ignore
         }
