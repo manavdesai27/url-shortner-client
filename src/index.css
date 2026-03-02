@@ -159,6 +159,7 @@ p {
   align-items: center;
   justify-content: space-between;
   height: 64px;
+  position: relative;
 }
 
 .brand img {
@@ -172,9 +173,62 @@ p {
   align-items: center;
 }
 
+/* Header mobile menu */
+.menu-toggle {
+  display: none;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+  line-height: 0;
+  color: var(--text);
+  cursor: pointer;
+}
+
+@media (max-width: 768px) {
+  .menu-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  /* Hide actions by default on mobile */
+  .header-actions {
+    display: none;
+  }
+
+  /* Dropdown panel when open */
+  .header-actions.is-open {
+    display: flex;
+    position: absolute;
+    top: 64px; /* matches .header-inner height */
+    left: 0;
+    right: 0;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    box-shadow: var(--shadow);
+    padding: var(--space-5) 20px;
+    flex-direction: column;
+    gap: var(--space-3);
+    z-index: 20;
+  }
+
+  /* Make buttons full-width for easier tapping */
+  .header-actions.is-open .btn {
+    width: 100%;
+  }
+}
+
+/* Desktop: keep existing layout; ensure toggle hidden */
+@media (min-width: 769px) {
+  .menu-toggle { display: none; }
+  .header-actions { display: flex; }
+}
+
 /* Hero */
 .hero {
-  padding: var(--space-9) 0;
+  padding: var(--space-4) 0;
   background: var(--surface);
 }
 
@@ -217,11 +271,6 @@ p {
   }
 }
 
-/* Shortener */
-.shorten-wrap {
-  transform: translateY(-50%);
-}
-
 .shorten-card {
   background: var(--accent) url('/src/images/bg-shorten-desktop.svg') no-repeat right top / cover;
   border-radius: var(--radius);
@@ -245,7 +294,12 @@ p {
   display: grid;
   grid-template-columns: 1fr auto;
   gap: var(--space-4);
+  align-items: start;
   width: 100%;
+}
+
+.shorten-input .btn-cta {
+  align-self: start;
 }
 
 .input-wrap {
@@ -277,6 +331,165 @@ p {
 
 .error-text.show {
   display: block;
+}
+
+.url-col .error-text,
+.alias-col .error-text,
+.expires-col .error-text {
+  min-height: 1rem;
+}
+
+/* Short link preview (theme-aligned) */
+.short-link-preview-wrap {
+  display: grid;
+  place-items: center;
+  margin-top: var(--space-3);
+}
+
+.short-link-preview {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  box-shadow: var(--shadow);
+  font-size: 0.95rem;
+}
+
+.short-link-preview .label {
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.short-link-preview .value {
+  color: var(--brand-dark);
+  font-weight: 700;
+}
+
+.short-link-preview a.value:visited {
+  color: var(--brand-dark);
+}
+
+.short-link-preview a.value:hover {
+  color: var(--brand);
+  text-decoration: underline;
+}
+
+/* Non-interactive look for draft/preview text */
+.short-link-preview.draft .value {
+  cursor: default;
+  text-decoration: none;
+}
+
+@media (max-width: 420px) {
+  .short-link-preview {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* Short link result (final with copy) */
+.short-link-result-wrap {
+  display: grid;
+  place-items: center;
+  margin-top: var(--space-3);
+}
+
+.short-link-result {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  box-shadow: var(--shadow);
+  font-size: 0.95rem;
+}
+
+.short-link-result .label {
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.short-link-result .value,
+.short-link-result .value:visited {
+  color: var(--brand-dark);
+  font-weight: 700;
+}
+
+.short-link-result .value:hover {
+  color: var(--brand);
+  text-decoration: underline;
+}
+
+@media (max-width: 420px) {
+  .short-link-result {
+    width: 100%;
+    justify-content: center;
+    flex-wrap: wrap;
+    row-gap: var(--space-2);
+  }
+}
+
+/* Responsive URL/Alias split inside shorten box */
+.inputs-row {
+  display: grid;
+  grid-template-columns: minmax(0, 55%) minmax(120px, 20%) minmax(160px, 25%);
+  gap: var(--space-3);
+  align-items: start;
+}
+
+/* Medium screens: allow a bit more width to alias if needed */
+@media (max-width: 900px) {
+  .inputs-row {
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-3);
+  }
+  .inputs-row .url-col {
+    grid-column: 1 / -1; /* URL spans full width on first row */
+  }
+}
+
+/* Small screens: compact side-by-side */
+@media (max-width: 640px) {
+  .inputs-row {
+    grid-template-columns: 1fr 1fr; /* alias | expires side-by-side */
+    gap: var(--space-2);
+  }
+  /* keep button inline, but make it more compact */
+  .shorten-input {
+    gap: var(--space-3);
+    grid-template-columns: 1fr auto;
+  }
+  .btn-cta {
+    padding: 0.6rem 0.9rem;
+    border-radius: var(--radius-sm);
+  }
+  /* slightly reduce alias/expiry input padding to save space */
+  .alias-col input,
+  .expires-col input {
+    padding: 0.75rem 0.9rem;
+  }
+}
+
+/* Very small screens: stack and make button full-width under inputs */
+@media (max-width: 420px) {
+  .inputs-row {
+    grid-template-columns: 1fr;
+  }
+  /* place button below the inputs and make it full-width */
+  .shorten-input {
+    grid-template-columns: 1fr;
+  }
+  .btn-cta {
+    width: 100%;
+    justify-self: stretch;
+  }
 }
 
 /* Url list */
