@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import UrlList from '../components/UrlList.jsx';
 import { useAuth } from '../context/AuthContext.tsx';
 
@@ -33,7 +33,7 @@ type SortField = 'createdAt' | 'clickCount';
 type SortDir = 'asc' | 'desc';
 
 export default function Links() {
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, apiFetch } = useAuth();
   const [items, setItems] = useState<Item[]>([]);
   const [page, setPage] = useState(0);
   const [size] = useState(10);
@@ -58,7 +58,7 @@ export default function Links() {
         `&includeExpired=${includeExpired}` +
         `&sort=${encodeURIComponent(`${sortField},${sortDir}`)}`;
 
-      const res = await fetch(url, { credentials: 'include' });
+      const res = await apiFetch(url);
       if (!res.ok) {
         setErrorMsg(`Failed to load links (status ${res.status})`);
         setLoading(false);
@@ -83,30 +83,36 @@ export default function Links() {
     }
   }
 
-  // Initial load and when auth state changes
+  const lastQueryKeyRef = useRef<string | null>(null);
+
   useEffect(() => {
-    if (canFetch) {
-      fetchPage(0);
-    } else {
-      // reset when logged out
+    if (!canFetch) {
+      // logged out or auth not ready: reset and clear query key
       setItems([] as Item[]);
       setPage(0);
       setHasMore(true);
       setErrorMsg(null);
+      lastQueryKeyRef.current = null;
+      return;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [canFetch]);
 
-  // Re-fetch when controls change
-  useEffect(() => {
-    if (!canFetch) return;
-    // reset then fetch the first page with new controls
+    // Build a stable key for current controls
+    const key = `${includeExpired}|${sortField}|${sortDir}`;
+
+    // Only fetch when controls effectively change (dedupe StrictMode double-invoke)
+    if (lastQueryKeyRef.current === key) {
+      return;
+    }
+    lastQueryKeyRef.current = key;
+
+    // reset then fetch first page for new controls
     setItems([] as Item[]);
     setPage(0);
     setHasMore(true);
     fetchPage(0);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [includeExpired, sortField, sortDir, canFetch]);
+  }, [canFetch, includeExpired, sortField, sortDir]);
+
 
   function loadMore() {
     if (hasMore && !loading) {
@@ -116,9 +122,7 @@ export default function Links() {
 
   async function refreshClicks(shortCode: string) {
     try {
-      const res = await fetch(`${apiUrl}/analytics/${shortCode}`, {
-        credentials: 'include',
-      });
+      const res = await apiFetch(`${apiUrl}/analytics/${shortCode}`);
       if (!res.ok) {
         // Non-owner or missing - surface a soft error
         setErrorMsg(`Failed to refresh clicks for ${shortCode} (status ${res.status})`);

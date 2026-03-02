@@ -11,7 +11,7 @@ export default function Login() {
   const [error, setError] = useState<string>('')
 
   const navigate = useNavigate()
-  const { refresh } = useAuth()
+  const { refresh, setAccessToken } = useAuth()
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -38,6 +38,11 @@ export default function Login() {
         }
         throw new Error(msg)
       }
+      // Read access token from JSON and store in memory
+      const data = await res.json().catch(() => ({} as any))
+      const token = typeof (data as any)?.accessToken === 'string' ? (data as any).accessToken : null
+      if (token) setAccessToken(token)
+
       // Optionally mark basic UI auth flag
       localStorage.setItem('auth', '1')
       await refresh()

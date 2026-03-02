@@ -18,7 +18,7 @@ export default function Shortener() {
   // transient toast message for network/system errors
   const [toast, setToast] = useState(null);
 
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, apiFetch } = useAuth();
   const [authPrompt, setAuthPrompt] = useState(false);
 
   // track in-flight request to cancel on unmount or re-submit
@@ -78,13 +78,12 @@ export default function Shortener() {
 
     setLoading(true);
     try {
-      const response = await fetch(`${apiUrl}/shorten`, {
+      const response = await apiFetch(`${apiUrl}/shorten`, {
         method: "POST",
         body: JSON.stringify({ originalUrl: value }),
         headers: {
           "Content-Type": "application/json",
         },
-        credentials: "include",
         signal: controller.signal,
       });
 

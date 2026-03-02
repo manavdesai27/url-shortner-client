@@ -12,7 +12,7 @@ export default function Signup() {
   const [error, setError] = useState<string>('')
 
   const navigate = useNavigate()
-  const { refresh } = useAuth()
+  const { refresh, setAccessToken } = useAuth()
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -58,6 +58,10 @@ export default function Signup() {
         navigate('/login')
         return
       }
+      // read access token JSON and store in memory
+      const loginData = await login.json().catch(() => ({} as any))
+      const loginToken = typeof (loginData as any)?.accessToken === 'string' ? (loginData as any).accessToken : null
+      if (loginToken) setAccessToken(loginToken)
 
       // Optional UI flag
       localStorage.setItem('auth', '1')
