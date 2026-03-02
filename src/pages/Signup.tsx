@@ -2,7 +2,9 @@ import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
-const api = import.meta.env.VITE_API_URL as string
+const apiBase =
+  (import.meta.env.VITE_API_BASE as string) ||
+  (import.meta.env.DEV ? (import.meta.env.VITE_API_URL as string) : '/api')
 
 export default function Signup() {
   const [username, setUsername] = useState('')
@@ -30,7 +32,7 @@ export default function Signup() {
     setLoading(true)
     try {
       // Register
-      const reg = await fetch(`${api}/auth/register`, {
+      const reg = await fetch(`${apiBase}/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password })
@@ -47,7 +49,7 @@ export default function Signup() {
       }
 
       // Auto-login to receive HttpOnly cookie
-      const login = await fetch(`${api}/auth/login`, {
+      const login = await fetch(`${apiBase}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',

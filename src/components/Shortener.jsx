@@ -4,7 +4,9 @@ import { Link } from "react-router-dom";
 import PulseLoader from "react-spinners/PulseLoader";
 import { useAuth } from "../context/AuthContext.tsx";
 
-const apiUrl = import.meta.env.VITE_API_URL;
+const apiBase =
+  (import.meta.env.VITE_API_BASE) ||
+  (import.meta.env.DEV ? import.meta.env.VITE_API_URL : '/api');
 const shortDomain = import.meta.env.VITE_SHORT_DOMAIN;
 
 export default function Shortener() {
@@ -78,7 +80,7 @@ export default function Shortener() {
 
     setLoading(true);
     try {
-      const response = await apiFetch(`${apiUrl}/shorten`, {
+      const response = await apiFetch(`${apiBase}/shorten`, {
         method: "POST",
         body: JSON.stringify({ originalUrl: value }),
         headers: {

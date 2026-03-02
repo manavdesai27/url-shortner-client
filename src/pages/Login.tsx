@@ -2,7 +2,9 @@ import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
-const api = import.meta.env.VITE_API_URL as string
+const apiBase =
+  (import.meta.env.VITE_API_BASE as string) ||
+  (import.meta.env.DEV ? (import.meta.env.VITE_API_URL as string) : '/api')
 
 export default function Login() {
   const [username, setUsername] = useState('')
@@ -22,7 +24,7 @@ export default function Login() {
     }
     setLoading(true)
     try {
-      const res = await fetch(`${api}/auth/login`, {
+      const res = await fetch(`${apiBase}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',

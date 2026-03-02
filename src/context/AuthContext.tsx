@@ -13,7 +13,9 @@ type AuthContextValue = {
 };
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
-const api = import.meta.env.VITE_API_URL as string;
+const api =
+  (import.meta.env.VITE_API_BASE as string) ||
+  (import.meta.env.DEV ? (import.meta.env.VITE_API_URL as string) : '/api');
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);

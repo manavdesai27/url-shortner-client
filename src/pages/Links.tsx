@@ -2,7 +2,9 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import UrlList from '../components/UrlList.jsx';
 import { useAuth } from '../context/AuthContext.tsx';
 
-const apiUrl = import.meta.env.VITE_API_URL as string;
+const apiBase =
+  (import.meta.env.VITE_API_BASE as string) ||
+  (import.meta.env.DEV ? (import.meta.env.VITE_API_URL as string) : '/api');
 const shortDomain = import.meta.env.VITE_SHORT_DOMAIN as string;
 
 type Item = {
@@ -54,7 +56,7 @@ export default function Links() {
     setErrorMsg(null);
     try {
       const url =
-        `${apiUrl}/links?page=${p}&size=${size}` +
+        `${apiBase}/links?page=${p}&size=${size}` +
         `&includeExpired=${includeExpired}` +
         `&sort=${encodeURIComponent(`${sortField},${sortDir}`)}`;
 
@@ -122,7 +124,7 @@ export default function Links() {
 
   async function refreshClicks(shortCode: string) {
     try {
-      const res = await apiFetch(`${apiUrl}/analytics/${shortCode}`);
+      const res = await apiFetch(`${apiBase}/analytics/${shortCode}`);
       if (!res.ok) {
         // Non-owner or missing - surface a soft error
         setErrorMsg(`Failed to refresh clicks for ${shortCode} (status ${res.status})`);
