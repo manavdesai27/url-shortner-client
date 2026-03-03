@@ -75,7 +75,7 @@ export default function Links() {
       const data: PageResponse = await res.json();
       const mapped: Item[] = (data.content || []).map((row) => ({
         url: row.originalUrl,
-        shortUrl: `${shortDomain}/${row.shortCode}`,
+        shortUrl: `${shortDomain}/l/${row.shortCode}`,
         shortCode: row.shortCode,
         clickCount: row.clickCount,
         createdAt: row.createdAt,
