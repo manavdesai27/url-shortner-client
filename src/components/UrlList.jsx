@@ -11,10 +11,10 @@ import { useState } from "react"
  */
 
 /**
- * @param {{ urlList: UrlItem[], onRefresh?: (shortCode: string) => (Promise<void>|void) }} props
+ * @param {{ urlList: UrlItem[], onRefresh?: (shortCode: string) => (Promise<void>|void), onManageRules?: (shortCode: string) => (Promise<void>|void) }} props
  */
 
-export default function UrlList({ urlList = /** @type {UrlItem[]} */([]), onRefresh }) {
+export default function UrlList({ urlList = /** @type {UrlItem[]} */([]), onRefresh, onManageRules }) {
   const [copiedIndex, setCopiedIndex] = useState(null)
   const [refreshingIndex, setRefreshingIndex] = useState(null)
 
@@ -132,6 +132,15 @@ export default function UrlList({ urlList = /** @type {UrlItem[]} */([]), onRefr
                   disabled={refreshingIndex === index}
                 >
                   {refreshingIndex === index ? "Refreshing…" : "Refresh clicks"}
+                </button>
+              )}
+              {onManageRules && (
+                <button
+                  type="button"
+                  className="btn btn-cta"
+                  onClick={() => onManageRules(element.shortCode)}
+                >
+                  Rules
                 </button>
               )}
             </div>
