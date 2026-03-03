@@ -36,31 +36,42 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const tryRefresh = async (): Promise<string | null> => {
+  const tryRefresh = async (): Promise<{ token: string | null; user: User | null }> => {
     try {
       const res = await fetch(`${api}/auth/refresh`, {
         method: 'POST',
         credentials: 'include', // sends httpOnly refresh cookie if available
       });
-      if (!res.ok) return null;
+      if (!res.ok) return { token: null, user: null };
       const data = await res.json().catch(() => ({}));
       const token = typeof data?.accessToken === 'string' ? data.accessToken : null;
+      const newUser = data?.username ? { username: String(data.username) } : null;
       if (token) setAccessToken(token);
-      return token;
+      if (newUser) setUser(newUser);
+      return { token, user: newUser };
     } catch {
-      return null;
+      return { token: null, user: null };
     }
   };
 
   const refresh = async () => {
     try {
-      // Ensure we have an access token; attempt refresh if missing
+      // Fast path: if we already have both token and user, avoid any network call
+      if (accessToken && user) {
+        return;
+      }
       let token = accessToken;
       if (!token) {
-        token = await tryRefresh();
+        const { token: t, user: u } = await tryRefresh();
+        token = t;
+        if (u) {
+          return; // we already have fresh user from refresh response
+        }
       }
-      const u = await callMe(token);
-      setUser(u);
+      if (token && !user) {
+        const u = await callMe(token);
+        setUser(u);
+      }
     } finally {
       setLoading(false);
     }
@@ -87,7 +98,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       const res = await fetch(input, { ...init, headers });
       if (res.status === 401 && retry) {
-        const newToken = await tryRefresh();
+        const { token: newToken } = await tryRefresh();
         if (newToken) {
           // retry once with new token
           const retryHeaders = new Headers(init?.headers || {});
