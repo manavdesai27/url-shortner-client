@@ -35,65 +35,6 @@ type PageResponse = {
 type SortField = 'createdAt' | 'clickCount';
 type SortDir = 'asc' | 'desc';
 
-type RuleTypeUI = 'TIME' | 'DEVICE' | 'COUNTRY' | 'AB';
-
-type RuleDto = {
-  id?: number;
-  type: RuleTypeUI;
-  priority?: number;
-  targetUrl: string;
-  active?: boolean;
-  // Pass-through config object; structure depends on type
-  // TIME: { startIso?: string, endIso?: string }
-  // DEVICE: { devices?: string[] }
-  // COUNTRY: { countries?: string[] }
-  // AB: { buckets?: Array<{ pct: number, url: string }> }
-  config?: any;
-};
-
-type RuleSetDto = {
-  enabled?: boolean;
-  version?: number;
-  rules: RuleDto[];
-};
-
-function isoToLocal(iso?: string | null): string {
-  if (!iso) return '';
-  try {
-    const d = new Date(iso);
-    if (Number.isNaN(d.getTime())) return '';
-    const tzOffset = d.getTimezoneOffset() * 60000;
-    const local = new Date(d.getTime() - tzOffset);
-    return local.toISOString().slice(0, 16);
-  } catch {
-    return '';
-  }
-}
-
-function localToIso(local: string): string | undefined {
-  if (!local) return undefined;
-  try {
-    const d = new Date(local);
-    if (Number.isNaN(d.getTime())) return undefined;
-    // Normalize to actual UTC ISO string
-    const tzOffset = d.getTimezoneOffset() * 60000;
-    const utc = new Date(d.getTime() - tzOffset);
-    return utc.toISOString();
-  } catch {
-    return undefined;
-  }
-}
-
-function splitCountries(text: string): string[] {
-  return (text || '')
-    .split(',')
-    .map((s) => s.trim().toUpperCase())
-    .filter(Boolean);
-}
-
-function joinCountries(arr?: string[]): string {
-  return (arr || []).join(',');
-}
 
 export default function Links() {
   const { user, loading: authLoading, apiFetch } = useAuth();
@@ -107,10 +48,6 @@ export default function Links() {
   // Rules editor state
   const [editorOpen, setEditorOpen] = useState(false);
   const [editingShortCode, setEditingShortCode] = useState<string | null>(null);
-  const [rulesLoading, setRulesLoading] = useState(false);
-  const [rulesSaving, setRulesSaving] = useState(false);
-  const [rulesError, setRulesError] = useState<string | null>(null);
-  const [form, setForm] = useState<RuleSetDto>({ enabled: false, rules: [] });
 
   // Analytics controls
   const [includeExpired, setIncludeExpired] = useState(false);
@@ -222,130 +159,6 @@ export default function Links() {
   function closeRulesEditor() {
     setEditorOpen(false);
     setEditingShortCode(null);
-    setRulesError(null);
-  }
-
-  function setEnabled(v: boolean) {
-    setForm((prev) => ({ ...prev, enabled: v }));
-  }
-
-  function addRule() {
-    setForm((prev) => ({
-      ...prev,
-      rules: [...(prev.rules || []), { type: 'DEVICE', priority: 100, targetUrl: '', active: true, config: {} }],
-    }));
-  }
-
-  function removeRule(idx: number) {
-    setForm((prev) => ({ ...prev, rules: (prev.rules || []).filter((_, i) => i !== idx) }));
-  }
-
-  function updateRuleField(idx: number, field: keyof RuleDto, value: any) {
-    setForm((prev) => {
-      const rules = [...(prev.rules || [])];
-      rules[idx] = { ...rules[idx], [field]: value };
-      if (field === 'type') {
-        rules[idx].config = {};
-      }
-      return { ...prev, rules };
-    });
-  }
-
-  // Config updaters
-  function toggleDevice(idx: number, device: string, checked: boolean) {
-    setForm((prev) => {
-      const rules = [...(prev.rules || [])];
-      const cur: string[] = Array.isArray(rules[idx].config?.devices) ? [...rules[idx].config.devices] : [];
-      const next = checked ? Array.from(new Set([...cur, device])) : cur.filter((d) => d !== device);
-      rules[idx] = { ...rules[idx], config: { ...(rules[idx].config || {}), devices: next } };
-      return { ...prev, rules };
-    });
-  }
-
-  function setCountries(idx: number, text: string) {
-    const arr = splitCountries(text);
-    setForm((prev) => {
-      const rules = [...(prev.rules || [])];
-      rules[idx] = { ...rules[idx], config: { ...(rules[idx].config || {}), countries: arr } };
-      return { ...prev, rules };
-    });
-  }
-
-  function setTime(idx: number, key: 'startIso' | 'endIso', localVal: string) {
-    const iso = localToIso(localVal);
-    setForm((prev) => {
-      const rules = [...(prev.rules || [])];
-      const cfg = { ...(rules[idx].config || {}) } as any;
-      if (iso) cfg[key] = iso;
-      else delete cfg[key];
-      rules[idx] = { ...rules[idx], config: cfg };
-      return { ...prev, rules };
-    });
-  }
-
-  function addBucket(idx: number) {
-    setForm((prev) => {
-      const rules = [...(prev.rules || [])];
-      const buckets: any[] = Array.isArray(rules[idx].config?.buckets) ? [...rules[idx].config.buckets] : [];
-      buckets.push({ pct: 50, url: '' });
-      rules[idx] = { ...rules[idx], config: { ...(rules[idx].config || {}), buckets } };
-      return { ...prev, rules };
-    });
-  }
-
-  function updateBucket(idx: number, bIndex: number, field: 'pct' | 'url', value: any) {
-    setForm((prev) => {
-      const rules = [...(prev.rules || [])];
-      const buckets: any[] = Array.isArray(rules[idx].config?.buckets) ? [...rules[idx].config.buckets] : [];
-      const b = { ...(buckets[bIndex] || { pct: 0, url: '' }) };
-      b[field] = field === 'pct' ? (parseInt(value, 10) || 0) : value;
-      buckets[bIndex] = b;
-      rules[idx] = { ...rules[idx], config: { ...(rules[idx].config || {}), buckets } };
-      return { ...prev, rules };
-    });
-  }
-
-  function removeBucket(idx: number, bIndex: number) {
-    setForm((prev) => {
-      const rules = [...(prev.rules || [])];
-      const buckets: any[] = Array.isArray(rules[idx].config?.buckets) ? [...rules[idx].config.buckets] : [];
-      buckets.splice(bIndex, 1);
-      rules[idx] = { ...rules[idx], config: { ...(rules[idx].config || {}), buckets } };
-      return { ...prev, rules };
-    });
-  }
-
-  async function saveRules() {
-    if (!editingShortCode) return;
-    setRulesSaving(true);
-    setRulesError(null);
-    try {
-      const payload: RuleSetDto = {
-        enabled: !!form.enabled,
-        rules: (form.rules || []).map((r) => ({
-          id: r.id,
-          type: r.type,
-          priority: typeof r.priority === 'number' ? r.priority : 100,
-          targetUrl: r.targetUrl,
-          active: r.active !== false,
-          config: r.config || {},
-        })),
-      };
-      const res = await apiFetch(`${apiBase}/links/${editingShortCode}/rules`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-      if (!res.ok) {
-        setRulesError(`Failed to save (status ${res.status})`);
-        return;
-      }
-      closeRulesEditor();
-    } catch {
-      setRulesError('Network error while saving rules.');
-    } finally {
-      setRulesSaving(false);
-    }
   }
 
   return (
